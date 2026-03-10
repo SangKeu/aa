@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>레벨업만이 살길 - 통합 효율 및 환생 플래너 V3.9</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            background-color: #f1f5f9; 
+            -webkit-tap-highlight-color: transparent;
+            color: #1e293b;
+        }
+
+        .maple-card { 
+            border-radius: 1.5rem; 
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.7); 
+        }
+
+        input::-webkit-inner-spin-button,
+        input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .boss-check-item { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.85rem;
+            border-radius: 1rem;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: white;
+        }
+
+        .boss-check-item.active { 
+            border-color: #ef4444; 
+            background-color: #fef2f2; 
+            color: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+        }
+
+        .tab-btn {
+            padding: 1.25rem;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .custom-field {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+        .custom-field:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .result-card {
+            background: #1e293b;
+            color: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .unit-label {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="p-4 md:p-8 pb-32">
+
+<div class="max-w-6xl mx-auto">
+    <header class="flex flex-col md:flex-row items-center justify-between mb-8 bg-white/80 backdrop-blur-md p-6 rounded-[2rem] shadow-sm border border-white gap-4">
+        <div class="text-center md:text-left">
+            <h1 class="text-2xl md:text-3xl font-black text-slate-800 flex items-center justify-center md:justify-start gap-3">
+                <span class="text-4xl">🍁</span> 레벨업만이 살길
+                <span class="bg-indigo-600 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest shadow-lg">V3.9 Pro</span>
+            </h1>
+            <p class="text-slate-500 text-xs font-semibold mt-2">시간 소요 및 SP 획득량 통합 정밀 분석</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="resetInputs()" class="px-5 py-2.5 text-red-500 hover:bg-red-50 transition text-sm font-bold rounded-xl border border-red-100">데이터 초기화</button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Input Section -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="maple-card p-6 border-l-8 border-l-blue-500">
+                <h2 class="text-[12px] font-black text-slate-400 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    데이터 입력
+                </h2>
+                
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2">현재 레벨</label>
+                            <input type="number" id="curLevel" value="1" min="1" inputmode="numeric" class="custom-field">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-blue-600 mb-2">목표 레벨</label>
+                            <input type="number" id="targetLevel" value="100" min="2" inputmode="numeric" class="custom-field !border-blue-200 !bg-blue-50/30">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">🔄 목표 환생 횟수</label>
+                            <div class="relative">
+                                <input type="number" id="curRebirthCount" value="10" min="1" inputmode="numeric" class="custom-field !border-emerald-100 !bg-emerald-50/30">
+                                <span class="unit-label">회</span>
+                            </div>
+                        </div>
+                        <div class="pt-0">
+                             <label class="block text-xs font-bold text-indigo-500 mb-2 uppercase">SP 보너스 버프 (%)</label>
+                            <div class="relative">
+                                <input type="number" id="spBuffPercent" value="0" inputmode="numeric" class="custom-field">
+                                <span class="unit-label">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-red-500 mb-3 uppercase">⏱️ 타임보스 (경험치 x1.5)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="boss-check-item" id="btn-900" onclick="setBoss(900)">900초</div>
+                            <div class="boss-check-item" id="btn-1200" onclick="setBoss(1200)">1200초</div>
+                            <div class="boss-check-item" id="btn-1500" onclick="setBoss(1500)">1500초</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-3 uppercase">분당 기본 경험치 (EPM)</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="relative">
+                                    <input type="number" id="epmJo" value="1" inputmode="numeric" class="custom-field !px-2 text-center text-sm">
+                                    <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-300">조</span>
+                                </div>
+                                <div class="relative">
+                                    <input type="number" id="epmEok" value="0" inputmode="numeric" class="custom-field !px-2 text-center text-sm">
+                                    <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-300">억</span>
+                                </div>
+                                <div class="relative">
+                                    <input type="number" id="epmMan" value="0" inputmode="numeric" class="custom-field !px-2 text-center text-sm">
+                                    <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-300">만</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Area -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
+                <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn active flex-1 rounded-xl">실시간 효율</button>
+                <button onclick="switchTab('planner')" id="tab-planner" class="tab-btn flex-1 rounded-xl">환생 시뮬레이터</button>
+            </div>
+
+            <!-- TAB 1: Analytics -->
+            <div id="content-analytics" class="space-y-6 animate-fade">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="maple-card p-6 border-2 border-indigo-500 bg-indigo-50/30">
+                        <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">⏱️ 총 환생 소요 시간 (목표 기준)</p>
+                        <p id="resTotalTime" class="text-2xl font-black mt-2 text-slate-800 break-words">-</p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-2" id="resTimeDesc">회당 약 - 소요</p>
+                    </div>
+                    <div class="maple-card p-6 border-2 border-emerald-500 bg-emerald-50/30">
+                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">💰 누적 기대 SP (목표 기준)</p>
+                        <p id="totalSpExpectation" class="text-2xl font-black mt-2 text-emerald-700">-</p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-2" id="resSpDesc">회당 - SP 획득</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="maple-card p-5">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">남은 경험치 (1회분)</p>
+                        <p id="resTotalExp" class="text-sm font-black mt-2 text-slate-800 break-all">-</p>
+                    </div>
+                    <div class="maple-card p-5 bg-gradient-to-br from-indigo-600 to-blue-700 text-white border-none">
+                        <p class="text-[10px] font-black text-white/70 uppercase tracking-widest">목표 레벨</p>
+                        <p id="resTargetLevelDisplay" class="text-xl font-black mt-1">Lv. -</p>
+                    </div>
+                </div>
+
+                <div class="maple-card overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h3 class="text-xs font-black text-slate-600 uppercase tracking-widest">목표 레벨 최종 효율 결과</h3>
+                        <span id="targetRebirthLabel" class="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-400 font-bold">10회 환생 기준</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-white">
+                                <tr class="text-[10px] text-slate-400 font-black uppercase">
+                                    <th class="px-6 py-4 border-b">레벨 단계</th>
+                                    <th class="px-6 py-4 border-b">회당 SP</th>
+                                    <th class="px-6 py-4 border-b text-emerald-600">총 획득 SP</th>
+                                    <th class="px-6 py-4 border-b text-right text-indigo-600">총 소요 시간</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailTable" class="text-sm divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: Planner -->
+            <div id="content-planner" class="hidden animate-fade">
+                <div class="maple-card p-8 border-l-8 border-l-emerald-500">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="space-y-6">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">보유 정보</h3>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-2">보유 SP</label>
+                                <div class="relative">
+                                    <input type="number" id="haveSp" class="custom-field" value="0" inputmode="numeric">
+                                    <span class="unit-label">SP</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-5">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">성장 목표</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="curJob" class="custom-field !text-xs !py-3"></select>
+                                <select id="tarJob" class="custom-field !text-xs !py-3"></select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="curT" class="custom-field !text-xs !py-3"></select>
+                                <select id="tarT" class="custom-field !text-xs !py-3"></select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="curP" class="custom-field !text-xs !py-3"></select>
+                                <select id="tarP" class="custom-field !text-xs !py-3"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-card mt-10">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                            <div class="flex-1 space-y-4 w-full">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-slate-400 uppercase">필요한 총 SP</span>
+                                    <span id="resTotal" class="text-lg font-black text-white">0 SP</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-slate-400 uppercase">부족한 SP</span>
+                                    <span id="resRemain" class="text-lg font-black text-orange-400">0 SP</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-blue-400 uppercase">달성 후 잔여 SP</span>
+                                    <span id="resExtraSp" class="text-lg font-black text-blue-300">0 SP</span>
+                                </div>
+                                <div class="h-px bg-slate-700"></div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-slate-400 uppercase">1회 환생 소요 시간 (목표 기준)</span>
+                                    <span id="resPlannerOnceTime" class="text-lg font-black text-indigo-300">0분 0초</span>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full md:w-64 bg-white/5 rounded-2xl p-6 text-center border border-white/10">
+                                <p class="text-[10px] font-black text-slate-400 uppercase mb-2">성장 완료 예상 시간</p>
+                                <p id="resTotalNeededTime" class="text-2xl font-black text-emerald-400">-</p>
+                                <div class="mt-4 pt-4 border-t border-white/10">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">필요 환생 횟수</p>
+                                    <p class="flex justify-center items-baseline gap-1">
+                                        <span id="resCount" class="text-3xl font-black text-white">0</span>
+                                        <span class="text-xs font-bold text-white/60">회</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const JOBS = [
+        { name: "1차 전직", cost: 0 }, { name: "2차 전직", cost: 350 }, { name: "3차 전직", cost: 3000 },
+        { name: "4차 전직", cost: 9000 }, { name: "5차 전직", cost: 21000 }, { name: "6차 전직", cost: 72000 },
+        { name: "7차 전직", cost: 252000 }
+    ];
+    const T_STEP_UNIT = 25000;
+    const P_STEP_UNIT = 100000;
+    const anchorPoints = { 1: 100, 100: 74038024, 200: 8400330788, 300: 46210837835, 400: 159432642825, 500: 552179696726 };
+
+    let activeBossTime = 0;
+
+    function getExpForLevel(lv) {
+        if (lv <= 1) return 0n;
+        if (lv < 500) {
+            const keys = Object.keys(anchorPoints).map(Number).sort((a, b) => a - b);
+            let low = 1, high = 500;
+            for (let i = 0; i < keys.length; i++) {
+                if (keys[i] <= lv) low = keys[i];
+                if (keys[i] > lv) { high = keys[i]; break; }
+            }
+            const ratio = Math.pow(anchorPoints[high] / anchorPoints[low], 1 / (high - low));
+            return BigInt(Math.floor(anchorPoints[low] * Math.pow(ratio, lv - low)));
+        }
+        return BigInt(Math.floor(anchorPoints[500] * Math.pow(1.01, lv - 500)));
+    }
+
+    function formatNumber(num) {
+        if (num === 0n) return "0";
+        if (num >= 1000000000000n) return (Number(num / 10000000000n) / 100).toFixed(2) + "조";
+        if (num >= 100000000n) return (Number(num / 1000000n) / 100).toFixed(2) + "억";
+        if (num >= 10000n) return (Number(num / 100n) / 100).toFixed(1) + "만";
+        return num.toString();
+    }
+
+    function formatTime(mins) {
+        if (mins <= 0 || isNaN(mins)) return "0분 0초";
+        const d = Math.floor(mins / 1440);
+        const h = Math.floor((mins % 1440) / 60);
+        const m = Math.floor(mins % 60);
+        const s = Math.round((mins * 60) % 60);
+        
+        let result = "";
+        if (d > 0) result += d + "일 ";
+        if (h > 0) result += h + "시간 ";
+        if (m > 0 || result !== "") result += m + "분 ";
+        if (s > 0 || (d === 0 && h === 0 && m === 0)) result += s + "초";
+        return result.trim();
+    }
+
+    function setBoss(sec) {
+        activeBossTime = (activeBossTime === sec) ? 0 : sec;
+        document.querySelectorAll('.boss-check-item').forEach(el => el.classList.remove('active'));
+        if (activeBossTime > 0) document.getElementById('btn-' + activeBossTime).classList.add('active');
+        calculate();
+    }
+
+    function switchTab(tab) {
+        document.getElementById('content-analytics').classList.toggle('hidden', tab !== 'analytics');
+        document.getElementById('content-planner').classList.toggle('hidden', tab !== 'planner');
+        document.getElementById('tab-analytics').classList.toggle('active', tab === 'analytics');
+        document.getElementById('tab-planner').classList.toggle('active', tab === 'planner');
+    }
+
+    function calculate() {
+        const curLv = parseInt(document.getElementById('curLevel').value) || 1;
+        const tarLv = parseInt(document.getElementById('targetLevel').value) || 100;
+        const spBuff = 1 + (parseFloat(document.getElementById('spBuffPercent').value || 0) / 100);
+        const targetRebirthCount = parseInt(document.getElementById('curRebirthCount').value) || 10;
+        
+        const epm = (BigInt(document.getElementById('epmJo').value || 0) * 1000000000000n) + 
+                    (BigInt(document.getElementById('epmEok').value || 0) * 100000000n) + 
+                    (BigInt(document.getElementById('epmMan').value || 0) * 10000n);
+        
+        const bossMult = activeBossTime > 0 ? ((activeBossTime * 1.5) + (3600 - activeBossTime)) / 3600 : 1;
+        const actualEpm = Number(epm) * bossMult;
+
+        // 경험치 합산
+        let totalExp = 0n;
+        for (let i = curLv; i < tarLv; i++) totalExp += getExpForLevel(i);
+        
+        const onceMins = actualEpm > 0 ? (Number(totalExp) / actualEpm) : 0;
+        const totalWorkMins = onceMins * targetRebirthCount;
+        const onceSp = Math.floor(tarLv * 3 * spBuff);
+
+        // 결과 업데이트 (실시간 효율)
+        document.getElementById('resTotalTime').innerText = formatTime(totalWorkMins);
+        document.getElementById('resTimeDesc').innerText = `회당 약 ${formatTime(onceMins)} 소요`;
+        document.getElementById('totalSpExpectation').innerText = (onceSp * targetRebirthCount).toLocaleString() + " SP";
+        document.getElementById('resSpDesc').innerText = `회당 ${onceSp.toLocaleString()} SP 획득`;
+        
+        document.getElementById('resTotalExp').innerText = formatNumber(totalExp);
+        document.getElementById('resTargetLevelDisplay').innerText = `Lv. ${tarLv}`;
+        document.getElementById('targetRebirthLabel').innerText = `${targetRebirthCount}회 환생 기준`;
+
+        // 분석 테이블 업데이트 (목표 레벨 결과만 표시)
+        const spReward = Math.floor(tarLv * 3 * spBuff);
+        const totalReward = spReward * targetRebirthCount;
+        const totalTime = onceMins * targetRebirthCount;
+
+        let tableRows = `<tr class="bg-blue-50/50">
+            <td class="px-6 py-4 font-bold text-slate-600">Lv.${tarLv} (목표)</td>
+            <td class="px-6 py-4 font-bold text-slate-500">${spReward.toLocaleString()} SP</td>
+            <td class="px-6 py-4 text-emerald-600 font-bold">${totalReward.toLocaleString()} SP</td>
+            <td class="px-6 py-4 text-right font-black text-indigo-600">${formatTime(totalTime)}</td>
+        </tr>`;
+        
+        document.getElementById('detailTable').innerHTML = tableRows;
+
+        // 플래너 탭 계산
+        const getCost = (lv, unit) => (lv * (lv + 1) / 2) * unit;
+        const getJobAcc = (idx) => { let s=0; for(let i=0; i<=idx; i++) s+=JOBS[i].cost; return s; };
+
+        const jobNeeded = Math.max(0, getJobAcc(parseInt(document.getElementById('tarJob').value)) - getJobAcc(parseInt(document.getElementById('curJob').value)));
+        const tNeeded = Math.max(0, getCost(parseInt(document.getElementById('tarT').value), T_STEP_UNIT) - getCost(parseInt(document.getElementById('curT').value), T_STEP_UNIT));
+        const pNeeded = Math.max(0, getCost(parseInt(document.getElementById('tarP').value), P_STEP_UNIT) - getCost(parseInt(document.getElementById('curP').value), P_STEP_UNIT));
+        
+        const totalNeeded = jobNeeded + tNeeded + pNeeded;
+        const haveSp = parseInt(document.getElementById('haveSp').value) || 0;
+        const remainSp = Math.max(0, totalNeeded - haveSp);
+        
+        // 필요 환생 횟수 올림 계산
+        const rebirthNeededCount = onceSp > 0 ? Math.ceil(remainSp / onceSp) : 0;
+        
+        // 잔여 SP 계산
+        const extraSp = rebirthNeededCount > 0 ? (rebirthNeededCount * onceSp) - remainSp : 0;
+
+        document.getElementById('resTotal').innerText = totalNeeded.toLocaleString() + " SP";
+        document.getElementById('resRemain').innerText = remainSp.toLocaleString() + " SP";
+        document.getElementById('resExtraSp').innerText = extraSp.toLocaleString() + " SP";
+        document.getElementById('resCount').innerText = rebirthNeededCount.toLocaleString();
+        document.getElementById('resPlannerOnceTime').innerText = formatTime(onceMins);
+        
+        const plannerTotalMins = onceMins * rebirthNeededCount;
+        document.getElementById('resTotalNeededTime').innerText = plannerTotalMins > 0 ? formatTime(plannerTotalMins) : "-";
+
+        saveToLocal();
+    }
+
+    function saveToLocal() {
+        const fields = ['curLevel', 'targetLevel', 'epmJo', 'epmEok', 'epmMan', 'spBuffPercent', 'curRebirthCount', 'haveSp', 'curJob', 'tarJob', 'curT', 'tarT', 'curP', 'tarP'];
+        const data = {};
+        fields.forEach(f => {
+            const el = document.getElementById(f);
+            if (el) data[f] = el.value;
+        });
+        localStorage.setItem('level_up_planner_v39_final_v2', JSON.stringify(data));
+    }
+
+    function loadFromLocal() {
+        const saved = localStorage.getItem('level_up_planner_v39_final_v2');
+        if (saved) {
+            const data = JSON.parse(saved);
+            Object.keys(data).forEach(k => {
+                const el = document.getElementById(k);
+                if (el) el.value = data[k];
+            });
+        }
+    }
+
+    function initSelects() {
+        const selects = {
+            job: [document.getElementById('curJob'), document.getElementById('tarJob')],
+            t: [document.getElementById('curT'), document.getElementById('tarT')],
+            p: [document.getElementById('curP'), document.getElementById('tarP')]
+        };
+
+        JOBS.forEach((j, i) => selects.job.forEach(s => s.add(new Option(i === 0 ? j.name : `${j.name} (+${j.cost.toLocaleString()} SP)`, i))));
+        for(let i=0; i<=10; i++) selects.t.forEach(s => s.add(new Option(i === 0 ? "초월 0단계" : `초월 ${i}단계 (+${(i*T_STEP_UNIT).toLocaleString()} SP)`, i)));
+        for(let i=0; i<=15; i++) selects.p.forEach(s => s.add(new Option(i === 0 ? "초월력 0" : `초월력 ${i}단계 (+${(i*P_STEP_UNIT).toLocaleString()} SP)`, i)));
+        
+        document.getElementById('tarJob').value = 6;
+    }
+
+    function resetInputs() {
+        if(confirm("모든 데이터를 초기화하시겠습니까?")) {
+            localStorage.removeItem('level_up_planner_v39_final_v2');
+            location.reload();
+        }
+    }
+
+    window.onload = () => {
+        initSelects();
+        loadFromLocal();
+        document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
+        calculate();
+    };
+</script>
+</body>
+</html>
+
