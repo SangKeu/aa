@@ -3,18 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>내 도구 모음</title>
+    <title>도구 모음</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700&display=swap');
+        body { font-family: 'Pretendard', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen space-y-4">
-    <h1 class="text-2xl font-bold mb-6">시뮬레이터 도구함</h1>
-    
-    <a href="통합플래너.html" class="w-64 p-4 bg-blue-600 text-white text-center rounded-lg shadow-lg hover:bg-blue-700 transition">
-        🚀 통합 효율 및 환생 플래너
-    </a>
+<body class="bg-[#f1f5f9] flex flex-col items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-sm space-y-4">
+        <h1 class="text-2xl font-bold text-[#1e293b] text-center mb-8">🎮 시뮬레이터 메뉴</h1>
+        
+        <a href="통합플래너.html" class="block w-full p-5 bg-white border-2 border-blue-500 text-blue-600 text-center rounded-2xl font-bold shadow-sm active:scale-95 transition">
+            🚀 통합 효율 및 환생 플래너
+        </a>
 
-    <a href="타수%20계산기.html" class="w-64 p-4 bg-green-600 text-white text-center rounded-lg shadow-lg hover:bg-green-700 transition">
-        ⚔️ 타수계산기
-    </a>
+        <a href="타수계산기.html" class="block w-full p-5 bg-white border-2 border-green-500 text-green-600 text-center rounded-2xl font-bold shadow-sm active:scale-95 transition">
+            ⚔️ 타수 계산기
+        </a>
+        
+        <p class="text-gray-400 text-xs text-center mt-10">파일명을 클릭하면 해당 도구로 이동합니다.</p>
+    </div>
 </body>
 </html>
