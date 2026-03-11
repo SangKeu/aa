@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>레벨업만이 살길 - 통합 효율 및 환생 플래너 V4.1</title>
+    <title>레벨업만이 살길 - 통합 효율 및 환생 플래너 V4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
@@ -133,19 +133,6 @@
             background-color: #fff7ed;
             border-color: #fdba74;
         }
-
-        .warning-box {
-            background: #fef2f2;
-            border: 1px solid #fee2e2;
-            color: #b91c1c;
-            padding: 0.75rem;
-            border-radius: 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
     </style>
 </head>
 <body class="p-4 md:p-8 pb-32">
@@ -155,7 +142,7 @@
         <div class="text-center md:text-left">
             <h1 class="text-2xl md:text-3xl font-black text-slate-800 flex items-center justify-center md:justify-start gap-3">
                 <span class="text-4xl">🍁</span> 레벨업만이 살길
-                <span class="bg-indigo-600 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest shadow-lg">V4.1 Pro</span>
+                <span class="bg-indigo-600 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest shadow-lg">V4.0 Pro</span>
             </h1>
             <p class="text-slate-500 text-xs font-semibold mt-2">시간 소요 및 SP 효율 최적화 시스템</p>
         </div>
@@ -189,7 +176,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">🔄 환생 횟수 설정</label>
                             <div class="relative">
-                                <input type="number" id="curRebirthCount" value="1" min="1" inputmode="numeric" class="custom-field !border-emerald-100 !bg-emerald-50/30">
+                                <input type="number" id="curRebirthCount" value="10" min="1" inputmode="numeric" class="custom-field !border-emerald-100 !bg-emerald-50/30">
                                 <span class="unit-label">회</span>
                             </div>
                         </div>
@@ -287,7 +274,7 @@
                 <div class="maple-card overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                         <h3 class="text-xs font-black text-slate-600 uppercase tracking-widest">설정 기준 데이터 상세</h3>
-                        <span id="targetRebirthLabel" class="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-400 font-bold">1회 환생 기준</span>
+                        <span id="targetRebirthLabel" class="text-[10px] px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-400 font-bold">10회 환생 기준</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
@@ -305,21 +292,11 @@
                 </div>
             </div>
 
-            <!-- TAB: Optimizer -->
+            <!-- TAB: Optimizer (NEW) -->
             <div id="content-optimizer" class="hidden animate-fade space-y-6">
                 <div class="maple-card p-8 border-l-8 border-l-orange-500 bg-orange-50/20">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 class="text-lg font-black text-slate-800">시간 내 환생 최대 효율 분석</h3>
-                            <p class="text-xs text-slate-500 font-bold">제한 시간 동안 환생 횟수를 모두 소모할 수 있는 최적의 레벨을 산출합니다.</p>
-                        </div>
-                    </div>
-
-                    <!-- Warning Message -->
-                    <div class="warning-box mb-6">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        <span>알림: 계산 공식에 따라 실제 인게임 플레이 시 약간의 오차 범위가 발생할 수 있으니 주의하시기 바랍니다.</span>
-                    </div>
+                    <h3 class="text-lg font-black text-slate-800 mb-2">시간 내 환생 최대 효율 분석</h3>
+                    <p class="text-xs text-slate-500 font-bold mb-6">입력한 제한 시간 동안 설정한 환생 횟수를 모두 소모할 수 있는 최적의 레벨을 찾습니다.</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                         <div class="p-4 bg-white rounded-xl shadow-sm border border-orange-100">
@@ -521,6 +498,7 @@
         resEl.className = `px-2 py-4 text-center font-black ${percent >= 90 ? 'text-orange-500' : 'text-blue-600'}`;
     }
 
+    // Optimizer Logic (Optimizing target level for given play time and rebirth count)
     function runOptimizer(actualEpm, spBuff, limitMins, targetRebirthCount, curLv) {
         if (actualEpm <= 0 || limitMins <= 0 || targetRebirthCount <= 0) return { level: "-", totalSp: "-", totalTime: "-" };
 
@@ -528,6 +506,7 @@
         let optimalLevel = curLv;
         let cumulativeExp = 0n;
         
+        // Find maximum level possible within allowed time per rebirth
         for (let lv = curLv; lv < 2000; lv++) {
             const expForNext = getExpForLevel(lv);
             const timeForNext = Number(expForNext) / actualEpm;
@@ -561,6 +540,7 @@
         
         const limitMins = (parseInt(document.getElementById('limitHour').value) || 0) * 60 + (parseInt(document.getElementById('limitMin').value) || 0);
 
+        // Standard Analytics
         document.getElementById('targetRebirthLabel').innerText = `${targetRebirthCount}회 환생 기준`;
         let totalExp = 0n;
         for (let i = curLv; i < tarLv; i++) totalExp += getExpForLevel(i);
@@ -576,6 +556,7 @@
         document.getElementById('resTargetLevelDisplay').innerText = `Lv. ${tarLv}`;
         document.getElementById('detailTable').innerHTML = `<tr class="bg-blue-50/50"><td class="px-6 py-4 font-bold text-slate-600">Lv.${tarLv} (목표)</td><td class="px-6 py-4 font-bold text-slate-500">${onceSp.toLocaleString()} SP</td><td class="px-6 py-4 text-emerald-600 font-bold">${(onceSp * targetRebirthCount).toLocaleString()} SP</td><td class="px-6 py-4 text-right font-black text-indigo-600">${formatTime(onceMins * targetRebirthCount)}</td></tr>`;
 
+        // Optimizer Logic
         const opt = runOptimizer(actualEpm, spBuff, limitMins, targetRebirthCount, curLv);
         document.getElementById('optLimitTime').innerText = formatTime(limitMins);
         document.getElementById('optAllowedTimePer').innerText = formatTime(limitMins / targetRebirthCount);
@@ -584,6 +565,7 @@
         document.getElementById('optTotalSp').innerText = opt.totalSp;
         document.getElementById('optTotalTime').innerText = opt.totalTime;
 
+        // Planner Logic
         const getCost = (lv, unit) => (lv * (lv + 1) / 2) * unit;
         const getJobAcc = (idx) => { let s=0; for(let i=0; i<=idx; i++) s+=JOBS[i].cost; return s; };
         const totalNeeded = Math.max(0, getJobAcc(parseInt(document.getElementById('tarJob').value)) - getJobAcc(parseInt(document.getElementById('curJob').value))) + Math.max(0, getCost(parseInt(document.getElementById('tarT').value), T_STEP_UNIT) - getCost(parseInt(document.getElementById('curT').value), T_STEP_UNIT)) + Math.max(0, getCost(parseInt(document.getElementById('tarP').value), P_STEP_UNIT) - getCost(parseInt(document.getElementById('curP').value), P_STEP_UNIT));
@@ -604,11 +586,11 @@
         const fields = ['curLevel', 'targetLevel', 'epmJo', 'epmEok', 'epmMan', 'spBuffPercent', 'curRebirthCount', 'haveSp', 'curJob', 'tarJob', 'curT', 'tarT', 'curP', 'tarP', 'limitHour', 'limitMin'];
         const data = {};
         fields.forEach(f => { const el = document.getElementById(f); if (el) data[f] = el.value; });
-        localStorage.setItem('level_up_planner_v41_final', JSON.stringify(data));
+        localStorage.setItem('level_up_planner_v4_final', JSON.stringify(data));
     }
 
     function loadFromLocal() {
-        const saved = localStorage.getItem('level_up_planner_v41_final');
+        const saved = localStorage.getItem('level_up_planner_v4_final');
         if (saved) {
             const data = JSON.parse(saved);
             Object.keys(data).forEach(k => { const el = document.getElementById(k); if (el) el.value = data[k]; });
@@ -621,3 +603,17 @@
         for(let i=0; i<=10; i++) selects.t.forEach(s => s.add(new Option(i === 0 ? "초월 0단계" : `초월 ${i}단계 (+${(i*T_STEP_UNIT).toLocaleString()} SP)`, i)));
         for(let i=0; i<=15; i++) selects.p.forEach(s => s.add(new Option(i === 0 ? "초월력 0단계" : `초월력 ${i}단계 (+${(i*P_STEP_UNIT).toLocaleString()} SP)`, i)));
     }
+
+    function resetInputs() { if(confirm("초기화하시겠습니까?")) { localStorage.removeItem('level_up_planner_v4_final'); location.reload(); } }
+
+    window.onload = () => {
+        initSelects();
+        loadFromLocal();
+        renderChaosTable();
+        document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
+        calculate();
+    };
+</script>
+</body>
+</html>
+
