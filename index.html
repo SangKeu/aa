@@ -621,19 +621,3 @@
         for(let i=0; i<=10; i++) selects.t.forEach(s => s.add(new Option(i === 0 ? "초월 0단계" : `초월 ${i}단계 (+${(i*T_STEP_UNIT).toLocaleString()} SP)`, i)));
         for(let i=0; i<=15; i++) selects.p.forEach(s => s.add(new Option(i === 0 ? "초월력 0단계" : `초월력 ${i}단계 (+${(i*P_STEP_UNIT).toLocaleString()} SP)`, i)));
     }
-<a href="타수계산기.html" class="bg-blue-500 text-white p-2 rounded">타수 계산기로 이동</a>
-
-    function resetInputs() { if(confirm("초기화하시겠습니까?")) { localStorage.removeItem('level_up_planner_v41_final'); location.reload(); } }
-
-    window.onload = () => {
-        initSelects();
-        loadFromLocal();
-        renderChaosTable();
-        document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
-        calculate();
-    };
-</script>
-</body>
-</html>
-
-
