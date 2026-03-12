@@ -168,7 +168,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-blue-600 mb-2">목표 레벨</label>
-                            <input type="number" id="targetLevel" value="100" min="2" max="2000" inputmode="numeric" class="custom-field !border-blue-200 !bg-blue-50/30">
+                            <input type="number" id="targetLevel" value="100" min="2" max="2026" inputmode="numeric" class="custom-field !border-blue-200 !bg-blue-50/30">
                         </div>
                     </div>
 
@@ -409,43 +409,25 @@
     const T_STEP_UNIT = 25000;
     const P_STEP_UNIT = 100000;
     
-    // 경험치 보정용 데이터 (exp.js가 없을 경우 대비)
-    const anchorPoints = { 20: 6512n, 100: 74038024n, 200: 8400330788n, 2000: 1675487174868418048n };
-    const CHAOS_DATA = { awakening: [{ region: "리스항구", base: 1500, max: 3890 }, { region: "헤네시스", base: 1875, max: 4863 }, { region: "엘리니아", base: 2250, max: 5835 }, { region: "커닝시티", base: 2625, max: 6808 }, { region: "페리온", base: 630, max: 1634, disabled: true }, { region: "슬리피우드", base: 3075, max: 7975  }, { region: "골드비치", base: 3300, max: 8559 }, { region: "커닝스퀘어", base: 795, max: 2062, disabled: true }, { region: "무릉도원", base: 870, max: 2256, disabled: true }, { region: "황금사원", base: 945, max: 2451, disabled: true }], normal: [{ region: "폐광", base: 450, max: 1167 }, { region: "지구방위본부", base: 495, max: 1283 }, { region: "미나르숲", base: 540, max: 1400 }, { region: "미나르계곡", base: 585, max: 1517 }, { region: "협곡", base: 630, max: 1634 }, { region: "아랫마을", base: 670, max: 1737 }, { region: "니할사막", base: 720, max: 1867 }, { region: "마가티아", base: 795, max: 2062 }, { region: "무릉도원", base: 870, max: 2256 }, { region: "황금사원", base: 945, max: 2451 }, { region: "테마파크", base: 1020, max: 2645 }, { region: "사자왕의성", base: 1110, max: 2879 }, { region: "콜로서스", base: 1200, max: 3112 }, { region: "신전", base: 1290, max: 3345 }, { region: "레헬른", base: 1425, max: 3696 }, { region: "츄츄아일랜드", base: 1575, max: 4085 }, { region: "미래의문", base: 1725, max: 4474 }, { region: "소멸의여로", base: 1875, max: 4863 }, { region: "아르카나", base: 2100, max: 5446 }, { region: "모라스", base: 2325, max: 6030 }, { region: "에스페라", base: 2550, max: 6614 }, { region: "문브릿지", base: 2775, max: 7197 }, { region: "고통의미궁", base: 3000, max: 7781 }, { region: "리멘", base: 3300, max: 8559 }] };
+    const CHAOS_DATA = { awakening: [{ region: "리스항구", base: 1500, max: 3890 }, { region: "헤네시스", base: 1875, max: 4863 }, { region: "엘리니아", base: 2250, max: 5835 }, { region: "커닝시티", base: 2625, max: 6808 }, { region: "슬리피우드", base: 3075, max: 7975  }, { region: "골드비치", base: 3300, max: 8559 }], normal: [{ region: "리멘", base: 3300, max: 8559 }] };
 
     let activeBossTime = 0;
     let currentChaosMode = 'awakening';
 
-    // 중요: 경험치 데이터 가져오기 (BigInt 적용)
+    // 1. 경험치 데이터 조회 함수 (BigInt 처리)
     function getExpForLevel(lv) {
         if (lv <= 0) return 0n;
-        
-        // 1. exp.js 파일에서 데이터를 정상적으로 불러왔는지 확인
+        // exp.js의 expData 변수가 로드되었는지 확인
         if (typeof expData !== 'undefined' && expData.exp) {
             if (lv <= expData.exp.length) {
-                // 숫자가 매우 클 수 있으므로 문자열로 강제 변환 후 BigInt로 처리
-                return BigInt(expData.exp[lv - 1].toString().replace(/[^0-9]/g, ''));
+                return BigInt(expData.exp[lv - 1].toString());
             }
         }
-        
-        // 2. 데이터가 없을 경우 백업 데이터(anchorPoints) 사용
-        if (anchorPoints[lv]) return anchorPoints[lv];
-        
-        // 3. 근사치 계산 (데이터 범위를 벗어난 경우)
-        const keys = Object.keys(anchorPoints).map(Number).sort((a, b) => a - b);
-        let low = 20, high = 2000;
-        for (let i = 0; i < keys.length; i++) { 
-            if (keys[i] <= lv) low = keys[i]; 
-            if (keys[i] > lv) { high = keys[i]; break; } 
-        }
-        const startExp = Number(anchorPoints[low]);
-        const endExp = Number(anchorPoints[high]);
-        const ratio = Math.pow(endExp / startExp, 1 / (high - low));
-        return BigInt(Math.floor(startExp * Math.pow(ratio, lv - low)));
+        return 0n; 
     }
 
     function formatTime(mins) {
-        if (mins <= 0 || isNaN(mins) || !isFinite(mins)) return "0분 0초";
+        if (mins <= 0 || !isFinite(mins)) return "0분 0초";
         const d = Math.floor(mins / 1440);
         const h = Math.floor((mins % 1440) / 60);
         const m = Math.floor(mins % 60);
@@ -468,8 +450,10 @@
     function switchTab(tab) {
         const tabs = ['analytics', 'optimizer', 'planner', 'chaos'];
         tabs.forEach(t => {
-            document.getElementById('content-' + t).classList.toggle('hidden', t !== tab);
-            document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+            const content = document.getElementById('content-' + t);
+            const btn = document.getElementById('tab-' + t);
+            if(content) content.classList.toggle('hidden', t !== tab);
+            if(btn) btn.classList.toggle('active', t === tab);
         });
     }
 
@@ -488,14 +472,13 @@
     }
 
     function renderChaosTable() {
-        const data = CHAOS_DATA[currentChaosMode];
+        const data = CHAOS_DATA[currentChaosMode] || [];
         const tbody = document.getElementById('chaosTable');
+        if(!tbody) return;
         tbody.innerHTML = '';
         data.forEach((item, idx) => {
-            const isDisabled = !!item.disabled;
             const row = document.createElement('tr');
-            if (isDisabled) row.className = "opacity-50 grayscale bg-slate-100/30";
-            row.innerHTML = `<td class="px-2 py-4 text-center font-bold text-slate-600 bg-slate-50/30 text-[11px]">${item.region}<br><span class="text-[10px] text-slate-400">(${isDisabled ? '---' : item.base})</span></td><td class="px-2 py-4 text-center"><input type="number" id="chaos-input-${idx}" class="chaos-input" placeholder="${isDisabled ? 'X' : '0'}" ${isDisabled ? 'disabled' : ''} oninput="updateChaosEffect(${idx}, ${item.base}, ${item.max})"></td><td class="px-2 py-4 text-center font-bold text-slate-400 text-[11px]">${isDisabled ? '구현X' : item.max.toLocaleString()}</td><td class="px-2 py-4 text-center font-black ${isDisabled ? 'text-slate-300' : 'text-blue-600'}" id="chaos-res-${idx}">${isDisabled ? '-' : '0%'}</td>`;
+            row.innerHTML = `<td class="px-2 py-4 text-center font-bold text-slate-600 bg-slate-50/30 text-[11px]">${item.region}<br><span class="text-[10px] text-slate-400">(${item.base})</span></td><td class="px-2 py-4 text-center"><input type="number" id="chaos-input-${idx}" class="chaos-input" placeholder="0" oninput="updateChaosEffect(${idx}, ${item.base}, ${item.max})"></td><td class="px-2 py-4 text-center font-bold text-slate-400 text-[11px]">${item.max.toLocaleString()}</td><td class="px-2 py-4 text-center font-black text-blue-600" id="chaos-res-${idx}">0%</td>`;
             tbody.appendChild(row);
         });
     }
@@ -516,7 +499,7 @@
         let optimalLevel = curLv;
         let cumulativeExp = 0n;
         
-        for (let lv = curLv; lv < 2000; lv++) {
+        for (let lv = curLv; lv < 2026; lv++) {
             const expForNext = getExpForLevel(lv);
             const timeForNext = Number(expForNext) / actualEpm;
             
@@ -540,15 +523,13 @@
 
     function calculate() {
         const curLv = parseInt(document.getElementById('curLevel').value) || 1;
-        const tarLv = Math.min(2000, parseInt(document.getElementById('targetLevel').value) || 100);
+        const tarLv = Math.min(2026, parseInt(document.getElementById('targetLevel').value) || 100);
         const spBuff = 1 + (parseFloat(document.getElementById('spBuffPercent').value || 0) / 100);
         const targetRebirthCount = parseInt(document.getElementById('curRebirthCount').value) || 1;
         
-        // EPM을 BigInt로 계산
-        const jo = BigInt(document.getElementById('epmJo').value || 0) * 1000000000000n;
-        const eok = BigInt(document.getElementById('epmEok').value || 0) * 100000000n;
-        const man = BigInt(document.getElementById('epmMan').value || 0) * 10000n;
-        const epm = jo + eok + man;
+        const epm = (BigInt(document.getElementById('epmJo').value || 0) * 1000000000000n) + 
+                    (BigInt(document.getElementById('epmEok').value || 0) * 100000000n) + 
+                    (BigInt(document.getElementById('epmMan').value || 0) * 10000n);
         
         const bossMult = activeBossTime > 0 ? ((activeBossTime * 1.5) + (3600 - activeBossTime)) / 3600 : 1;
         const actualEpm = Number(epm) * bossMult;
@@ -557,17 +538,16 @@
 
         document.getElementById('targetRebirthLabel').innerText = `${targetRebirthCount}회 환생 기준`;
         
-        // 총 경험치 합산 (BigInt)
         let totalExp = 0n;
         for (let i = curLv; i < tarLv; i++) {
             totalExp += getExpForLevel(i);
         }
-
+        
         const onceMins = actualEpm > 0 ? (Number(totalExp) / actualEpm) : 0;
         const onceSp = Math.floor(tarLv * 3 * spBuff);
         const sppm = onceMins > 0 ? (onceSp / onceMins) : 0;
 
-        // 결과 반영
+        // 실시간 효율 업데이트
         document.getElementById('resTotalTime').innerText = formatTime(onceMins * targetRebirthCount);
         document.getElementById('resTimeDesc').innerText = `회당 약 ${formatTime(onceMins)} 소요`;
         document.getElementById('totalSpExpectation').innerText = (onceSp * targetRebirthCount).toLocaleString() + " SP";
@@ -576,7 +556,7 @@
         document.getElementById('resTargetLevelDisplay').innerText = `Lv. ${tarLv}`;
         document.getElementById('detailTable').innerHTML = `<tr class="bg-blue-50/50"><td class="px-6 py-4 font-bold text-slate-600">Lv.${tarLv} (목표)</td><td class="px-6 py-4 font-bold text-slate-500">${onceSp.toLocaleString()} SP</td><td class="px-6 py-4 text-emerald-600 font-bold">${(onceSp * targetRebirthCount).toLocaleString()} SP</td><td class="px-6 py-4 text-right font-black text-indigo-600">${formatTime(onceMins * targetRebirthCount)}</td></tr>`;
 
-        // 최적화 도구 실행
+        // 최적화 분석 업데이트
         const opt = runOptimizer(actualEpm, spBuff, limitMins, targetRebirthCount, curLv);
         document.getElementById('optLimitTime').innerText = formatTime(limitMins);
         document.getElementById('optAllowedTimePer').innerText = formatTime(limitMins / targetRebirthCount);
@@ -585,10 +565,14 @@
         document.getElementById('optTotalSp').innerText = opt.totalSp;
         document.getElementById('optTotalTime').innerText = opt.totalTime;
 
-        // 플래너 계산
+        // 환생 플래너 업데이트
         const getCost = (lv, unit) => (lv * (lv + 1) / 2) * unit;
         const getJobAcc = (idx) => { let s=0; for(let i=0; i<=idx; i++) s+=JOBS[i].cost; return s; };
-        const totalNeeded = Math.max(0, getJobAcc(parseInt(document.getElementById('tarJob').value)) - getJobAcc(parseInt(document.getElementById('curJob').value))) + Math.max(0, getCost(parseInt(document.getElementById('tarT').value), T_STEP_UNIT) - getCost(parseInt(document.getElementById('curT').value), T_STEP_UNIT)) + Math.max(0, getCost(parseInt(document.getElementById('tarP').value), P_STEP_UNIT) - getCost(parseInt(document.getElementById('curP').value), P_STEP_UNIT));
+        
+        const totalNeeded = Math.max(0, getJobAcc(parseInt(document.getElementById('tarJob').value)) - getJobAcc(parseInt(document.getElementById('curJob').value))) + 
+                            Math.max(0, getCost(parseInt(document.getElementById('tarT').value), T_STEP_UNIT) - getCost(parseInt(document.getElementById('curT').value), T_STEP_UNIT)) + 
+                            Math.max(0, getCost(parseInt(document.getElementById('tarP').value), P_STEP_UNIT) - getCost(parseInt(document.getElementById('curP').value), P_STEP_UNIT));
+        
         const haveSp = parseInt(document.getElementById('haveSp').value) || 0;
         const remainSp = Math.max(0, totalNeeded - haveSp);
         const rebirthNeededCount = onceSp > 0 ? Math.ceil(remainSp / onceSp) : 0;
@@ -598,7 +582,7 @@
         document.getElementById('resExtraSp').innerText = (rebirthNeededCount > 0 ? (rebirthNeededCount * onceSp) - remainSp : 0).toLocaleString() + " SP";
         document.getElementById('resCount').innerText = rebirthNeededCount.toLocaleString();
         document.getElementById('resPlannerOnceTime').innerText = formatTime(onceMins);
-        document.getElementById('resTotalNeededTime').innerText = (rebirthNeededCount > 0 && onceMins > 0) ? formatTime(onceMins * rebirthNeededCount) : "-";
+        document.getElementById('resTotalNeededTime').innerText = rebirthNeededCount > 0 ? formatTime(onceMins * rebirthNeededCount) : "-";
 
         saveToLocal();
     }
@@ -607,11 +591,11 @@
         const fields = ['curLevel', 'targetLevel', 'epmJo', 'epmEok', 'epmMan', 'spBuffPercent', 'curRebirthCount', 'haveSp', 'curJob', 'tarJob', 'curT', 'tarT', 'curP', 'tarP', 'limitHour', 'limitMin'];
         const data = {};
         fields.forEach(f => { const el = document.getElementById(f); if (el) data[f] = el.value; });
-        localStorage.setItem('level_up_planner_v4_final', JSON.stringify(data));
+        localStorage.setItem('maple_planner_v4_pro', JSON.stringify(data));
     }
 
     function loadFromLocal() {
-        const saved = localStorage.getItem('level_up_planner_v4_final');
+        const saved = localStorage.getItem('maple_planner_v4_pro');
         if (saved) {
             const data = JSON.parse(saved);
             Object.keys(data).forEach(k => { const el = document.getElementById(k); if (el) el.value = data[k]; });
@@ -620,25 +604,21 @@
 
     function initSelects() {
         const selects = { job: [document.getElementById('curJob'), document.getElementById('tarJob')], t: [document.getElementById('curT'), document.getElementById('tarT')], p: [document.getElementById('curP'), document.getElementById('tarP')] };
-        JOBS.forEach((j, i) => selects.job.forEach(s => s.add(new Option(i === 0 ? j.name : `${j.name} (+${j.cost.toLocaleString()} SP)`, i))));
-        for(let i=0; i<=10; i++) selects.t.forEach(s => s.add(new Option(i === 0 ? "초월 0단계" : `초월 ${i}단계 (+${(i*T_STEP_UNIT).toLocaleString()} SP)`, i)));
-        for(let i=0; i<=15; i++) selects.p.forEach(s => s.add(new Option(i === 0 ? "초월력 0단계" : `초월력 ${i}단계 (+${(i*P_STEP_UNIT).toLocaleString()} SP)`, i)));
+        JOBS.forEach((j, i) => selects.job.forEach(s => { if(s) s.add(new Option(i === 0 ? j.name : `${j.name} (+${j.cost.toLocaleString()} SP)`, i)) }));
+        for(let i=0; i<=10; i++) selects.t.forEach(s => { if(s) s.add(new Option(i === 0 ? "초월 0단계" : `초월 ${i}단계 (+${(i*T_STEP_UNIT).toLocaleString()} SP)`, i)) });
+        for(let i=0; i<=15; i++) selects.p.forEach(s => { if(s) s.add(new Option(i === 0 ? "초월력 0단계" : `초월력 ${i}단계 (+${(i*P_STEP_UNIT).toLocaleString()} SP)`, i)) });
     }
 
-    function resetInputs() { if(confirm("초기화하시겠습니까?")) { localStorage.removeItem('level_up_planner_v4_final'); location.reload(); } }
+    function resetInputs() { if(confirm("초기화하시겠습니까?")) { localStorage.removeItem('maple_planner_v4_pro'); location.reload(); } }
 
     window.onload = () => {
         initSelects();
         loadFromLocal();
         renderChaosTable();
-        
-        // 데이터가 로드될 때까지 약간의 지연 후 계산 시작 (expData 로드 대기)
-        setTimeout(() => {
-            document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
-            calculate();
-        }, 300);
+        document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
+        // exp.js가 로드되는 시간을 고려해 약간의 지연 후 첫 계산 실행
+        setTimeout(calculate, 300);
     };
 </script>
 </body>
 </html>
-
